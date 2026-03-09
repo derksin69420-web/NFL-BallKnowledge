@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFL Player Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--card:#0f1729;--border:rgba(255,255,255,0.07);
+  --text:#e2e8f0;--dim:#64748b;--mid:#94a3b8;
+  --blue:#38bdf8;--purple:#c084fc;--green:#4ade80;--red:#f87171;--yellow:#fbbf24;
+}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh}
+.app{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 16px 64px;
+  background:radial-gradient(ellipse at 15% 0%,rgba(56,189,248,.07) 0%,transparent 55%),
+             radial-gradient(ellipse at 85% 100%,rgba(192,132,252,.07) 0%,transparent 55%)}
+/* LOGO */
+.logo{font-family:'Bebas Neue',sans-serif;font-size:clamp(44px,9vw,76px);letter-spacing:4px;line-height:1;
+  background:linear-gradient(135deg,var(--blue) 0%,var(--purple) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.tagline{color:var(--dim);font-size:12px;letter-spacing:3px;text-transform:uppercase;margin-top:6px}
+.header{text-align:center;margin-bottom:36px}
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;
+  width:100%;max-width:580px;box-shadow:0 0 0 1px rgba(56,189,248,.04),0 32px 80px rgba(0,0,0,.55)}
+/* MENU */
+.menu-btn{display:flex;align-items:center;gap:14px;width:100%;padding:18px 22px;border-radius:14px;
+  border:1px solid var(--border);background:rgba(255,255,255,.025);color:var(--text);cursor:pointer;
+  font-family:inherit;font-size:15px;font-weight:600;text-align:left;transition:all .2s;margin-bottom:10px}
+.menu-btn:hover{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.4);color:var(--blue);transform:translateX(5px)}
+.btn-icon{font-size:22px;flex-shrink:0}
+.btn-label{flex:1}
+.btn-meta{font-size:12px;color:var(--dim);font-weight:500}
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+.footnote{font-size:11px;color:#273040;text-align:center;letter-spacing:.5px}
+/* PROGRESS */
+.progress-wrap{width:100%;height:4px;background:rgba(255,255,255,.05);border-radius:2px;margin-bottom:30px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:2px;transition:width .4s ease}
+/* QUIZ */
+.q-meta{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.q-counter{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)}
+.streak{display:inline-flex;align-items:center;gap:5px;background:rgba(251,191,36,.1);
+  border:1px solid rgba(251,191,36,.3);border-radius:20px;padding:3px 11px;
+  font-size:12px;color:var(--yellow);font-weight:700}
+.cat-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:20px;
+  font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  border:1px solid currentColor;margin-bottom:18px}
+.question{font-size:clamp(17px,3.2vw,22px);font-weight:500;line-height:1.55;margin-bottom:28px;color:#f1f5f9}
+.player{color:var(--blue);font-weight:700}
+/* CHOICES */
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{display:flex;align-items:center;gap:13px;padding:15px 20px;border-radius:13px;
+  border:1px solid var(--border);background:rgba(255,255,255,.025);color:#cbd5e1;
+  cursor:pointer;font-family:inherit;font-size:15px;font-weight:500;text-align:left;
+  transition:all .18s;width:100%}
+.choice:hover:not(:disabled){background:rgba(56,189,248,.08);border-color:rgba(56,189,248,.35);color:var(--text)}
+.choice.correct{background:rgba(74,222,128,.13);border-color:var(--green);color:var(--green)}
+.choice.wrong{background:rgba(248,113,113,.13);border-color:var(--red);color:var(--red)}
+.choice:disabled{cursor:default}
+.letter{width:28px;height:28px;border-radius:50%;border:1.5px solid currentColor;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+/* FEEDBACK */
+.feedback{margin-top:18px;padding:13px 17px;border-radius:12px;font-size:15px;font-weight:500}
+.feedback.correct{background:rgba(74,222,128,.08);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.feedback.wrong{background:rgba(248,113,113,.08);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+/* NEXT BTN */
+.next-btn{margin-top:16px;width:100%;padding:16px;border-radius:13px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--blue),var(--purple));color:#0a0e1a;
+  font-family:inherit;font-size:16px;font-weight:700;transition:opacity .2s,transform .1s;letter-spacing:.3px}
+.next-btn:hover{opacity:.88;transform:translateY(-2px)}
+/* RESULTS */
+.score-huge{font-family:'Bebas Neue',sans-serif;font-size:90px;line-height:1;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.score-sub{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--dim)}
+.grade-row{display:flex;align-items:center;gap:10px;margin:14px 0 4px;justify-content:center}
+.grade-emoji{font-size:34px}
+.grade-text{font-size:19px;font-weight:700}
+.section-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#334155;margin-bottom:14px}
+.cat-list{display:flex;flex-direction:column;gap:9px}
+.cat-row{display:flex;align-items:center;gap:10px}
+.cat-name{font-size:13px;width:130px;color:var(--mid);white-space:nowrap}
+.bar-wrap{flex:1;height:6px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .7s ease}
+.cat-frac{font-size:12px;color:var(--dim);width:32px;text-align:right}
+.play-again{width:100%;padding:18px;border-radius:14px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--blue),var(--purple));color:#0a0e1a;
+  font-family:inherit;font-size:17px;font-weight:700;margin-top:24px;
+  transition:opacity .2s,transform .1s;letter-spacing:.3px}
+.play-again:hover{opacity:.88;transform:translateY(-2px)}
+/* SCREEN TRANSITIONS */
+.screen{animation:fadeUp .3s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- rendered by JS -->
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+const RAW = [
+["Kyler Murray","QB","1","ARI","Oklahoma",27,6],
+["Marvin Harrison Jr.","WR","18","ARI","Ohio State",22,1],
+["Trey McBride","TE","85","ARI","Colorado State",25,3],
+["James Conner","RB","6","ARI","Pittsburgh",29,8],
+["Zach Ertz","TE","86","ARI","Stanford",34,12],
+["Zay Jones","WR","4","ARI","East Carolina",29,7],
+["Greg Dortch","WR","83","ARI","Wake Forest",27,5],
+["Michael Wilson","WR","14","ARI","Stanford",24,2],
+["Emari Demercado","RB","33","ARI","TCU",25,3],
+["Budda Baker","S","3","ARI","Washington",28,8],
+["Byron Murphy Jr.","CB","7","ARI","Washington",27,6],
+["Dennis Gardeck","LB","45","ARI","Sioux Falls",30,7],
+["Zaven Collins","LB","25","ARI","Tulsa",25,4],
+["Kyzir White","LB","40","ARI","West Virginia",28,6],
+["Paris Johnson Jr.","OT","77","ARI","Ohio State",23,2],
+["Will Hernandez","OG","71","ARI","UTEP",29,7],
+["Hjalte Froholdt","C","68","ARI","Arkansas",28,6],
+["Leki Fotu","DT","95","ARI","Utah",27,5],
+["Jonathan Ledbetter","DE","91","ARI","Georgia",27,4],
+["Xavier Watts","S","0","ARI","Notre Dame",23,1],
+["Matt Prater","K","5","ARI","UCF",40,18],
+["Andy Lee","P","4","ARI","Pittsburgh",43,21],
+["Tanner McLachlan","TE","87","ARI","Arizona",24,2],
+["Michael Carter II","CB","36","ARI","Duke",25,4],
+["Kei'Trel Clark","CB","35","ARI","Louisville",24,2],
+["Dante Stills","DT","96","ARI","West Virginia",25,2],
+["Roy Lopez","DT","90","ARI","Arizona",28,4],
+["Kirk Cousins","QB","8","ATL","Michigan State",37,13],
+["Bijan Robinson","RB","7","ATL","Texas",23,2],
+["Drake London","WR","5","ATL","USC",23,3],
+["Kyle Pitts","TE","8","ATL","Florida",24,4],
+["Darnell Mooney","WR","1","ATL","Tulane",27,5],
+["Ray-Ray McCloud III","WR","34","ATL","Clemson",28,7],
+["Tyler Allgeier","RB","25","ATL","BYU",24,3],
+["Younghoe Koo","K","7","ATL","Georgia Southern",30,8],
+["Bradley Pinion","P","13","ATL","Clemson",31,10],
+["Matthew Bergeron","OT","71","ATL","Syracuse",24,2],
+["Chris Lindstrom","OG","63","ATL","Boston College",27,6],
+["Drew Dalman","C","67","ATL","Stanford",26,4],
+["Kaleb McGary","OT","76","ATL","Washington",28,6],
+["Grady Jarrett","DT","97","ATL","Clemson",31,10],
+["David Onyemata","DT","93","ATL","Manitoba",32,9],
+["Lorenzo Carter","LB","55","ATL","Georgia",29,7],
+["Kaden Elliss","LB","55","ATL","Idaho",28,5],
+["Jessie Bates III","S","3","ATL","Wake Forest",28,7],
+["A.J. Terrell","CB","24","ATL","Clemson",26,5],
+["Mike Hughes","CB","21","ATL","UCF",28,7],
+["Troy Andersen","LB","44","ATL","Montana State",26,3],
+["Dee Alford","CB","37","ATL","Georgia Southern",26,5],
+["Casey Hayward Jr.","CB","29","ATL","Vanderbilt",35,13],
+["Arnold Ebiketie","LB","17","ATL","Penn State",26,3],
+["Zach Harrison","DE","96","ATL","Ohio State",25,3],
+["Lamar Jackson","QB","8","BAL","Louisville",27,7],
+["Derrick Henry","RB","22","BAL","Alabama",30,9],
+["Mark Andrews","TE","89","BAL","Oklahoma",30,7],
+["Zay Flowers","WR","4","BAL","Boston College",24,2],
+["Nelson Agholor","WR","15","BAL","USC",31,10],
+["Rashod Bateman","WR","7","BAL","Minnesota",25,4],
+["Isaiah Likely","TE","80","BAL","Coastal Carolina",25,3],
+["Justice Hill","RB","43","BAL","Oklahoma State",27,6],
+["Roquan Smith","LB","0","BAL","Georgia",27,6],
+["Patrick Queen","LB","6","BAL","LSU",27,5],
+["Marlon Humphrey","CB","44","BAL","Alabama",28,8],
+["Kyle Hamilton","S","14","BAL","Notre Dame",24,3],
+["Marcus Williams","S","13","BAL","Utah",29,8],
+["Odafe Oweh","LB","99","BAL","Penn State",25,4],
+["Justin Madubuike","DT","92","BAL","Texas A&M",27,5],
+["Nnamdi Madubuike","DT","92","BAL","Texas A&M",27,5],
+["Michael Pierce","DT","97","BAL","Samford",32,9],
+["Ronnie Stanley","OT","79","BAL","Notre Dame",31,9],
+["Kevin Zeitler","OG","70","BAL","Utah",35,14],
+["Tyler Linderbaum","C","64","BAL","Iowa",25,3],
+["Morgan Moses","OT","76","BAL","Virginia",34,12],
+["Andrew Vorhees","OG","68","BAL","USC",26,2],
+["Justin Tucker","K","9","BAL","Texas",35,13],
+["Jordan Stout","P","11","BAL","Penn State",26,3],
+["Brandon Stephens","CB","21","BAL","SMU",27,4],
+["Ar'Darius Washington","S","26","BAL","TCU",25,4],
+["Geno Stone","S","26","BAL","Iowa",26,5],
+["Josh Allen","QB","17","BUF","Wyoming",28,7],
+["James Cook","RB","4","BUF","Georgia",24,3],
+["Stefon Diggs","WR","14","BUF","Maryland",31,9],
+["Keon Coleman","WR","0","BUF","Florida State",22,1],
+["Dalton Kincaid","TE","86","BUF","Utah",26,2],
+["Dawson Knox","TE","88","BUF","Ole Miss",28,6],
+["Ty Johnson","RB","26","BUF","Maryland",28,6],
+["Von Miller","LB","40","BUF","Texas A&M",35,14],
+["Matt Milano","LB","58","BUF","Boston College",30,8],
+["Tremaine Edmunds","LB","49","BUF","Virginia Tech",27,7],
+["Tre'Davious White","CB","27","BUF","LSU",29,8],
+["Rasul Douglas","CB","23","BUF","West Virginia",30,8],
+["Micah Hyde","S","23","BUF","Iowa",34,12],
+["Jordan Poyer","S","21","BUF","Oregon State",33,12],
+["Damar Hamlin","S","3","BUF","Pittsburgh",26,4],
+["Ed Oliver","DT","91","BUF","Houston",27,6],
+["DaQuan Jones","DT","92","BUF","Penn State",33,11],
+["Greg Rousseau","DE","50","BUF","Miami",25,4],
+["A.J. Epenesa","DE","57","BUF","Iowa",26,5],
+["Dion Dawkins","OT","73","BUF","Temple",30,8],
+["David Edwards","OG","79","BUF","Wisconsin",28,6],
+["Mitch Morse","C","60","BUF","Missouri",32,10],
+["Spencer Brown","OT","79","BUF","Northern Iowa",27,4],
+["Tyler Bass","K","2","BUF","Georgia Southern",28,5],
+["Sam Martin","P","6","BUF","Appalachian State",35,12],
+["Taron Johnson","CB","24","BUF","Weber State",28,7],
+["Christian Benford","CB","47","BUF","Villanova",24,3],
+["Taylor Rapp","S","20","BUF","Washington",27,6],
+["Bryce Young","QB","9","CAR","Alabama",23,2],
+["Chuba Hubbard","RB","30","CAR","Oklahoma State",25,4],
+["Adam Thielen","WR","19","CAR","Minnesota State",34,12],
+["Diontae Johnson","WR","5","CAR","Toledo",28,6],
+["Hayden Hurst","TE","81","CAR","South Carolina",32,7],
+["Tommy Tremble","TE","82","CAR","Notre Dame",25,4],
+["Miles Sanders","RB","6","CAR","Penn State",27,6],
+["Xavier Legette","WR","17","CAR","South Carolina",24,1],
+["Jaycee Horn","CB","8","CAR","South Carolina",25,4],
+["Shaq Thompson","LB","7","CAR","Washington",30,10],
+["Brian Burns","LB","53","CAR","Florida State",26,6],
+["Derrick Brown","DT","95","CAR","Auburn",27,5],
+["Yetur Gross-Matos","DE","97","CAR","Penn State",27,5],
+["Ikem Ekwonu","OT","79","CAR","NC State",24,3],
+["Austin Corbett","OG","63","CAR","Nevada",30,7],
+["Bradley Bozeman","C","54","CAR","Alabama",30,8],
+["Taylor Moton","OT","72","CAR","Western Michigan",30,8],
+["Eddy Pineiro","K","4","CAR","Florida",29,6],
+["Johnny Hekker","P","6","CAR","Oregon State",35,14],
+["DJ Chark Jr.","WR","1","CAR","LSU",29,7],
+["Shi Smith","WR","12","CAR","South Carolina",25,4],
+["LaBryan Ray","DT","91","CAR","Alabama",25,4],
+["Amare Barno","DE","51","CAR","Virginia Tech",26,3],
+["Donte Jackson","CB","26","CAR","LSU",29,7],
+["Jeremy Chinn","S","21","CAR","Southern Illinois",27,5],
+["Xavier Woods","S","25","CAR","Louisiana Tech",29,8],
+["Caleb Williams","QB","18","CHI","USC",23,1],
+["D.J. Moore","WR","2","CHI","Maryland",27,6],
+["Rome Odunze","WR","15","CHI","Washington",23,1],
+["Keenan Allen","WR","13","CHI","California",32,12],
+["Cole Kmet","TE","85","CHI","Notre Dame",26,5],
+["Gerald Everett","TE","84","CHI","South Alabama",31,8],
+["D'Andre Swift","RB","4","CHI","Georgia",26,5],
+["Khalil Herbert","RB","24","CHI","Virginia Tech",26,4],
+["Roschon Johnson","RB","23","CHI","Texas",24,2],
+["Montez Sweat","LB","90","CHI","Mississippi State",28,6],
+["Tremaine Edmunds","LB","49","CHI","Virginia Tech",27,7],
+["Kevin Byard","S","31","CHI","Middle Tennessee",31,9],
+["Jaquan Brisker","S","9","CHI","Penn State",26,3],
+["Kyler Gordon","CB","6","CHI","Washington",25,3],
+["Jaylon Johnson","CB","33","CHI","Utah",26,5],
+["Nate Davis","OG","66","CHI","Charlotte",28,6],
+["Darnell Wright","OT","58","CHI","Tennessee",24,2],
+["Matt Pryor","OT","69","CHI","TCU",30,7],
+["Ryan Bates","OG","62","CHI","Penn State",28,6],
+["Coleman Shelton","C","65","CHI","Washington",30,7],
+["Gervon Dexter Sr.","DT","99","CHI","Florida",24,2],
+["Andrew Billings","DT","96","CHI","Baylor",30,9],
+["DeMarcus Walker","DE","95","CHI","Florida State",31,8],
+["Cairo Santos","K","5","CHI","Tulane",33,10],
+["Tory Taylor","P","16","CHI","Iowa",25,1],
+["DeAndre Swift","RB","4","CHI","Georgia",26,5],
+["Lorenzo Neal","S","30","CHI","Fresno State",24,2],
+["Joe Burrow","QB","9","CIN","LSU",28,5],
+["Ja'Marr Chase","WR","1","CIN","LSU",24,4],
+["Tee Higgins","WR","5","CIN","Clemson",26,5],
+["Tyler Boyd","WR","83","CIN","Pittsburgh",30,9],
+["Drew Sample","TE","89","CIN","Washington",28,6],
+["Mike Gesicki","TE","88","CIN","Penn State",29,7],
+["Zack Moss","RB","21","CIN","Utah",27,5],
+["Joe Mixon","RB","28","CIN","Oklahoma",29,8],
+["Chase Brown","RB","30","CIN","Illinois",25,2],
+["Sam Hubbard","DE","94","CIN","Ohio State",29,7],
+["Trey Hendrickson","LB","91","CIN","Florida Atlantic",30,9],
+["B.J. Hill","DT","92","CIN","NC State",29,7],
+["DJ Reader","DT","98","CIN","Clemson",31,9],
+["Logan Wilson","LB","55","CIN","Wyoming",28,5],
+["Germaine Pratt","LB","57","CIN","NC State",28,6],
+["Dax Hill","S","23","CIN","Michigan",25,3],
+["Vonn Bell","S","24","CIN","Ohio State",30,9],
+["Chidobe Awuzie","CB","22","CIN","Colorado",30,8],
+["Mike Hilton","CB","21","CIN","Ole Miss",30,8],
+["Orlando Brown Jr.","OT","75","CIN","Oklahoma",28,7],
+["Alex Cappa","OG","65","CIN","Humboldt State",30,7],
+["Ted Karras","C","64","CIN","Notre Dame",31,9],
+["Jonah Williams","OT","73","CIN","Alabama",27,6],
+["Evan McPherson","K","2","CIN","Florida",25,4],
+["Brad Robbins","P","4","CIN","Michigan",26,2],
+["Cam Taylor-Britt","CB","29","CIN","Nebraska",25,3],
+["Joseph Ossai","LB","58","CIN","Texas",25,3],
+["Deshaun Watson","QB","4","CLE","Clemson",29,7],
+["Nick Chubb","RB","24","CLE","Georgia",29,7],
+["Amari Cooper","WR","2","CLE","Alabama",30,10],
+["Jerry Jeudy","WR","3","CLE","Alabama",26,5],
+["David Njoku","TE","85","CLE","Miami",28,7],
+["Elijah Moore","WR","8","CLE","Ole Miss",25,4],
+["Jerome Ford","RB","34","CLE","Cincinnati",25,3],
+["Pierre Strong Jr.","RB","20","CLE","South Dakota State",25,3],
+["Myles Garrett","DE","95","CLE","Texas A&M",29,8],
+["Za'Darius Smith","LB","99","CLE","Kentucky",32,10],
+["Jeremiah Owusu-Koramoah","LB","28","CLE","Notre Dame",26,4],
+["Sione Takitaki","LB","44","CLE","BYU",29,6],
+["Juan Thornhill","S","1","CLE","Virginia",29,6],
+["Grant Delpit","S","22","CLE","LSU",26,5],
+["Greg Newsome II","CB","20","CLE","Northwestern",25,4],
+["Martin Emerson Jr.","CB","23","CLE","Mississippi State",25,3],
+["Joel Bitonio","OG","75","CLE","Nevada",34,11],
+["Jedrick Wills Jr.","OT","71","CLE","Alabama",26,5],
+["Ethan Pocic","C","55","CLE","LSU",30,8],
+["Wyatt Teller","OG","77","CLE","Virginia Tech",30,7],
+["Dawand Jones","OT","79","CLE","Ohio State",25,2],
+["Dustin Hopkins","K","2","CLE","Florida State",34,11],
+["Corey Bojorquez","P","9","CLE","New Mexico",30,7],
+["Maurice Hurst II","DT","68","CLE","Michigan",29,7],
+["Dalvin Tomlinson","DT","94","CLE","Alabama",30,8],
+["Jordan McFadden","OT","67","CLE","Clemson",25,3],
+["Denzel Ward","CB","21","CLE","Ohio State",28,7],
+["Dak Prescott","QB","4","DAL","Mississippi State",31,9],
+["CeeDee Lamb","WR","88","DAL","Oklahoma",25,5],
+["Brandin Cooks","WR","3","DAL","Oregon State",31,11],
+["Jake Ferguson","TE","87","DAL","Wisconsin",25,3],
+["Tony Pollard","RB","20","DAL","Memphis",27,6],
+["Ezekiel Elliott","RB","21","DAL","Ohio State",29,9],
+["Deuce Vaughn","RB","42","DAL","Kansas State",24,2],
+["Micah Parsons","LB","11","DAL","Penn State",25,4],
+["Demarcus Lawrence","DE","90","DAL","Boise State",33,11],
+["Mazi Smith","DT","58","DAL","Michigan",24,2],
+["Osa Odighizuwa","DT","97","DAL","UCLA",27,4],
+["Sam Williams","DE","56","DAL","Ole Miss",26,3],
+["Zack Martin","OG","70","DAL","Notre Dame",34,11],
+["Tyron Smith","OT","77","DAL","USC",34,14],
+["Tyler Smith","OT","73","DAL","Tulsa",24,3],
+["Brock Hoffman","C","69","DAL","NC State",26,4],
+["Trevon Diggs","CB","7","DAL","Alabama",27,5],
+["DaRon Bland","CB","26","DAL","Fresno State",25,3],
+["Malik Hooker","S","28","DAL","Ohio State",29,8],
+["Donovan Wilson","S","6","DAL","Texas A&M",29,7],
+["Jayron Kearse","S","27","DAL","Clemson",31,9],
+["Brandon Aubrey","K","17","DAL","Notre Dame",29,2],
+["Bryan Anger","P","5","DAL","California",36,13],
+["Markquese Bell","S","41","DAL","Florida A&M",26,3],
+["Chauncey Golston","DE","59","DAL","Iowa",27,4],
+["Luke Schoonmaker","TE","86","DAL","Michigan",25,2],
+["KaVontae Turpin","WR","9","DAL","TCU",28,3],
+["Bo Nix","QB","10","DEN","Oregon",25,1],
+["Courtland Sutton","WR","14","DEN","SMU",29,7],
+["Javonte Williams","RB","33","DEN","North Carolina",25,4],
+["Marvin Mims Jr.","WR","19","DEN","Oklahoma",23,2],
+["Greg Dulcich","TE","80","DEN","UCLA",25,3],
+["Adam Trautman","TE","82","DEN","Dayton",28,5],
+["Jaleel McLaughlin","RB","38","DEN","Lenoir-Rhyne",25,2],
+["Samaje Perine","RB","34","DEN","Oklahoma",29,8],
+["Patrick Surtain II","CB","2","DEN","Alabama",24,4],
+["Nik Bonitto","LB","15","DEN","Oklahoma",25,3],
+["Baron Browning","LB","56","DEN","Ohio State",26,4],
+["Jonah Elliss","LB","55","DEN","Utah",23,1],
+["Justin Simmons","S","31","DEN","Boston College",31,10],
+["Caden Sterns","S","30","DEN","Texas",25,4],
+["Riley Moss","CB","23","DEN","Iowa",25,3],
+["Ja'Quan McMillian","CB","28","DEN","East Carolina",24,2],
+["Garett Bolles","OT","72","DEN","Utah",32,8],
+["Ben Powers","OG","62","DEN","Oklahoma",28,6],
+["Quinn Meinerz","OG","77","DEN","Wisconsin-Whitewater",26,4],
+["Lloyd Cushenberry III","C","79","DEN","LSU",27,5],
+["Mike McGlinchey","OT","69","DEN","Notre Dame",31,7],
+["Wil Lutz","K","3","DEN","Georgia State",31,9],
+["Riley Dixon","P","9","DEN","Syracuse",31,9],
+["Zach Allen","DE","99","DEN","Boston College",28,6],
+["D.J. Jones","DT","93","DEN","Mississippi",30,8],
+["Matt Henningsen","DT","91","DEN","Wisconsin",24,2],
+["Levi Wallace","CB","29","DEN","Alabama",29,7],
+["Jared Goff","QB","16","DET","California",30,9],
+["Amon-Ra St. Brown","WR","14","DET","USC",24,4],
+["Aidan Hutchinson","DE","97","DET","Michigan",24,3],
+["Jahmyr Gibbs","RB","26","DET","Alabama",23,2],
+["David Montgomery","RB","5","DET","Iowa State",27,6],
+["Sam LaPorta","TE","87","DET","Iowa",23,2],
+["Josh Reynolds","WR","8","DET","Texas A&M",29,8],
+["Jameson Williams","WR","9","DET","Alabama",24,3],
+["Malcolm Rodriguez","LB","44","DET","Oklahoma State",26,3],
+["Alex Anzalone","LB","34","DET","Florida",30,8],
+["Derrick Barnes","LB","55","DET","Purdue",26,4],
+["Alim McNeill","DT","54","DET","NC State",25,4],
+["DJ Reader","DT","98","DET","Clemson",31,9],
+["Marcus Davenport","DE","92","DET","UTSA",28,7],
+["Brian Branch","S","32","DET","Alabama",23,2],
+["Kerby Joseph","S","31","DET","Illinois",25,3],
+["Carlton Davis III","CB","24","DET","Auburn",28,7],
+["Emmanuel Moseley","CB","41","DET","Tennessee",28,7],
+["Penei Sewell","OT","58","DET","Oregon",24,4],
+["Frank Ragnow","C","77","DET","Arkansas",29,7],
+["Taylor Decker","OT","68","DET","Ohio State",31,9],
+["Graham Glasgow","OG","60","DET","Michigan",32,9],
+["Jake McQuaide","LS","49","DET","Ohio State",36,13],
+["Jake Bates","K","19","DET","Michigan Tech",26,1],
+["Jack Fox","P","3","DET","Rice",28,5],
+["Levi Onwuzurike","DT","75","DET","Washington",27,4],
+["Za'Darius Smith","LB","99","DET","Kentucky",32,10],
+["Jordan Love","QB","10","GB","Utah State",26,5],
+["Josh Jacobs","RB","8","GB","Alabama",27,6],
+["Christian Watson","WR","9","GB","North Dakota State",25,3],
+["Romeo Doubs","WR","87","GB","Nevada",25,3],
+["Jayden Reed","WR","11","GB","Michigan State",25,2],
+["Luke Musgrave","TE","88","GB","Oregon State",24,2],
+["Tucker Kraft","TE","85","GB","South Dakota State",25,2],
+["Emanuel Wilson","RB","42","GB","Fort Valley State",25,2],
+["Karl Brooks","DE","92","GB","Bowling Green",25,2],
+["Lukas Van Ness","LB","91","GB","Iowa",23,2],
+["Preston Smith","LB","91","GB","Mississippi State",32,10],
+["De'Vondre Campbell","LB","59","GB","Minnesota",31,9],
+["Quay Walker","LB","7","GB","Georgia",25,3],
+["Kenny Clark","DT","97","GB","UCLA",29,8],
+["Devonte Wyatt","DT","95","GB","Georgia",27,4],
+["Eric Stokes","CB","21","GB","Georgia",27,4],
+["Carrington Valentine","CB","20","GB","Kentucky",24,2],
+["Jaire Alexander","CB","23","GB","Louisville",28,7],
+["Xavier McKinney","S","29","GB","Alabama",26,5],
+["Evan Williams","S","31","GB","Oregon",24,1],
+["Elgton Jenkins","OT","74","GB","Mississippi State",29,6],
+["Josh Myers","C","71","GB","Ohio State",26,4],
+["Zach Tom","OG","50","GB","Wake Forest",25,3],
+["Jordan Morgan","OT","76","GB","Tulane",24,1],
+["Brandon McManus","K","8","GB","Pittsburgh",34,11],
+["Daniel Whelan","P","6","GB","Stanford",26,2],
+["Keisean Nixon","CB","25","GB","South Carolina",28,6],
+["C.J. Stroud","QB","7","HOU","Ohio State",23,2],
+["Stefon Diggs","WR","14","HOU","Maryland",31,9],
+["Tank Dell","WR","3","HOU","Houston",26,2],
+["Nico Collins","WR","12","HOU","Michigan",26,4],
+["Dalton Schultz","TE","86","HOU","Stanford",29,7],
+["Joe Mixon","RB","28","HOU","Oklahoma",29,8],
+["Dare Ogunbowale","RB","33","HOU","Auburn",30,9],
+["Will Anderson Jr.","DE","51","HOU","Alabama",22,2],
+["Danielle Hunter","DE","96","HOU","LSU",30,10],
+["DeMeco Ryans","LB","59","HOU","Alabama",40,11],
+["Azeez Al-Shaair","LB","0","HOU","Florida Atlantic",28,6],
+["Christian Harris","LB","48","HOU","Alabama",24,3],
+["Derek Stingley Jr.","CB","24","HOU","LSU",24,3],
+["Steven Nelson","CB","21","HOU","Oregon State",32,10],
+["Jimmie Ward","S","20","HOU","Northern Iowa",33,11],
+["Jalen Pitre","S","5","HOU","Baylor",26,3],
+["Jarvis Landry","WR","18","HOU","LSU",32,11],
+["Shaq Mason","OG","60","HOU","Georgia Tech",32,10],
+["Tytus Howard","OT","70","HOU","Alabama State",29,6],
+["Laremy Tunsil","OT","78","HOU","Ole Miss",30,9],
+["Kenyon Green","OG","55","HOU","Texas A&M",25,3],
+["Ka'imi Fairbairn","K","7","HOU","UCLA",32,9],
+["Cameron Johnston","P","5","HOU","Ohio State",31,8],
+["Henry To'oTo'o","LB","41","HOU","Alabama",24,2],
+["Jerry Hughes","DE","55","HOU","TCU",38,15],
+["Tim Settle","DT","75","HOU","Virginia Tech",28,7],
+["Folorunso Fatukasi","DT","93","HOU","Connecticut",29,7],
+["Anthony Richardson","QB","5","IND","Florida",23,2],
+["Michael Pittman Jr.","WR","11","IND","USC",27,5],
+["Jonathan Taylor","RB","28","IND","Wisconsin",25,5],
+["Alec Pierce","WR","14","IND","Cincinnati",25,3],
+["Mo Alie-Cox","TE","81","IND","VCU",31,8],
+["Will Mallory","TE","87","IND","Miami",25,3],
+["Trey Sermon","RB","28","IND","Ohio State",26,4],
+["Braden Smith","OT","72","IND","Auburn",29,7],
+["Quenton Nelson","OG","56","IND","Notre Dame",29,7],
+["Ryan Kelly","C","78","IND","Alabama",32,9],
+["Bernhard Raimann","OT","79","IND","Central Michigan",27,3],
+["Will Fries","OG","67","IND","Penn State",27,4],
+["DeForest Buckner","DT","99","IND","Oregon",30,9],
+["Samson Ebukam","DE","56","IND","Eastern Washington",30,8],
+["E.J. Speed","LB","45","IND","Tarleton State",28,6],
+["Zaire Franklin","LB","44","IND","Syracuse",28,7],
+["Grover Stewart","DT","90","IND","Albany State",32,8],
+["Julian Blackmon","S","32","IND","Utah",27,5],
+["Rodney Thomas II","S","23","IND","Yale",26,3],
+["Kenny Moore II","CB","23","IND","Valdosta State",29,8],
+["Darrell Baker Jr.","CB","33","IND","Georgia",24,2],
+["Matt Gay","K","7","IND","Utah",31,6],
+["Rigoberto Sanchez","P","2","IND","Hawaii",30,8],
+["Kwity Paye","DE","51","IND","Michigan",26,4],
+["Darius Leonard","LB","53","IND","South Carolina State",29,7],
+["Josh Downs","WR","1","IND","North Carolina",23,2],
+["Laiatu Latu","DE","91","IND","UCLA",24,1],
+["Trevor Lawrence","QB","16","JAX","Clemson",25,4],
+["Brian Thomas Jr.","WR","7","JAX","LSU",23,1],
+["Evan Engram","TE","17","JAX","Ole Miss",30,8],
+["Christian Kirk","WR","13","JAX","Texas A&M",28,7],
+["Gabe Davis","WR","15","JAX","UCF",26,5],
+["D'Ernest Johnson","RB","30","JAX","South Florida",29,6],
+["Travis Etienne Jr.","RB","1","JAX","Clemson",25,4],
+["Tank Bigsby","RB","4","JAX","Auburn",24,2],
+["Josh Hines-Allen","LB","41","JAX","Kentucky",28,6],
+["Travon Walker","DE","44","JAX","Georgia",24,3],
+["Roy Robertson-Harris","DE","95","JAX","UTEP",31,9],
+["Arik Armstead","DT","91","JAX","Oregon",32,10],
+["Jeremiah Ledbetter","DT","96","JAX","Arkansas",30,8],
+["Myles Jack","LB","44","JAX","UCLA",30,9],
+["Foyesade Oluokun","LB","23","JAX","Yale",29,7],
+["Devin Lloyd","LB","33","JAX","Utah",26,3],
+["Darnell Savage","S","26","JAX","Maryland",28,6],
+["Andre Cisco","S","5","JAX","Syracuse",25,4],
+["Tyson Campbell","CB","32","JAX","Georgia",26,4],
+["Darious Williams","CB","11","JAX","UAB",31,7],
+["Cam Robinson","OT","74","JAX","Alabama",29,8],
+["Brandon Scherff","OG","68","JAX","Iowa",33,10],
+["Luke Fortner","C","75","JAX","Kentucky",28,4],
+["Walker Little","OT","73","JAX","Stanford",26,4],
+["Riley Patterson","K","18","JAX","Memphis",27,4],
+["Logan Cooke","P","9","JAX","Mississippi State",30,7],
+["Mac Jones","QB","10","JAX","Alabama",26,4],
+["Patrick Mahomes","QB","15","KC","Texas Tech",29,7],
+["Travis Kelce","TE","87","KC","Cincinnati",35,12],
+["Rashee Rice","WR","4","KC","SMU",24,2],
+["Xavier Worthy","WR","1","KC","Texas",22,1],
+["Isiah Pacheco","RB","10","KC","Rutgers",26,3],
+["Kareem Hunt","RB","29","KC","Toledo",29,8],
+["Mecole Hardman Jr.","WR","17","KC","Georgia",27,6],
+["Juju Smith-Schuster","WR","9","KC","USC",28,8],
+["Chris Jones","DT","95","KC","Mississippi State",30,9],
+["George Karlaftis","DE","56","KC","Purdue",24,3],
+["Nick Bolton","LB","32","KC","Missouri",25,4],
+["Willie Gay Jr.","LB","50","KC","Mississippi State",27,5],
+["Drue Tranquill","LB","23","KC","Notre Dame",30,7],
+["L'Jarius Sneed","CB","38","KC","Louisiana Tech",27,5],
+["Trent McDuffie","CB","22","KC","Washington",24,3],
+["Justin Reid","S","20","KC","Stanford",28,7],
+["Bryan Cook","S","6","KC","Cincinnati",26,3],
+["Mike Danna","DE","51","KC","Michigan",27,5],
+["Derrick Nnadi","DT","91","KC","Florida State",29,7],
+["Jawaan Taylor","OT","75","KC","Florida",28,6],
+["Joe Thuney","OG","62","KC","NC State",32,9],
+["Creed Humphrey","C","61","KC","Oklahoma",26,4],
+["Trey Smith","OG","65","KC","Tennessee",26,4],
+["Harrison Butker","K","7","KC","Georgia Tech",29,8],
+["Tommy Townsend","P","5","KC","Florida",28,5],
+["Justin Watson","WR","84","KC","Penn",29,7],
+["JuJu Smith-Schuster","WR","9","KC","USC",28,8],
+["Gardner Minshew II","QB","15","LV","Washington State",28,6],
+["Davante Adams","WR","17","LV","Fresno State",32,11],
+["Brock Bowers","TE","89","LV","Georgia",22,1],
+["Maxx Crosby","DE","98","LV","Eastern Michigan",27,6],
+["Josh Jacobs","RB","8","LV","Alabama",27,6],
+["Jakobi Meyers","WR","16","LV","NC State",28,6],
+["Michael Mayer","TE","87","LV","Notre Dame",23,2],
+["Alexander Mattison","RB","22","LV","Boise State",27,6],
+["Aidan O'Connell","QB","4","LV","Purdue",26,2],
+["Christian Wilkins","DT","94","LV","Clemson",29,6],
+["Malcolm Koonce","LB","51","LV","Buffalo",26,4],
+["Luke Masterson","LB","44","LV","Wake Forest",26,3],
+["Robert Spillane","LB","43","LV","Western Michigan",29,7],
+["Marcus Epps","S","1","LV","Wyoming",28,6],
+["Isaiah Pola-Mao","S","20","LV","USC",26,4],
+["Brandon Facyson","CB","36","LV","Virginia Tech",30,8],
+["Jakorian Bennett","CB","23","LV","Maryland",24,2],
+["Kolton Miller","OT","74","LV","UCLA",29,7],
+["Dylan Parham","OG","67","LV","Memphis",26,3],
+["Andre James","C","68","LV","UCLA",29,6],
+["Thayer Munford Jr.","OT","79","LV","Ohio State",27,4],
+["Daniel Carlson","K","2","LV","Auburn",30,7],
+["AJ Cole","P","6","LV","NC State",28,6],
+["Ameer Abdullah","RB","22","LV","Nebraska",33,11],
+["Nesta Jade Silvera","DT","92","LV","Arizona State",26,4],
+["John Jenkins","DT","95","LV","Georgia",35,13],
+["Jerry Tillery","DT","99","LV","Notre Dame",29,7],
+["Justin Herbert","QB","10","LAC","Oregon",26,5],
+["Keenan Allen","WR","13","LAC","California",32,12],
+["Austin Ekeler","RB","30","LAC","Western Colorado",29,7],
+["Ladd McConkey","WR","15","LAC","Georgia",23,1],
+["Quentin Johnston","WR","1","LAC","TCU",24,2],
+["Will Dissly","TE","80","LAC","Washington",29,7],
+["Joshua Palmer","WR","5","LAC","Tennessee",25,4],
+["Gerald Everett","TE","7","LAC","South Alabama",31,8],
+["Gus Edwards","RB","35","LAC","Rutgers",29,7],
+["Khalil Mack","LB","52","LAC","Buffalo",33,11],
+["Joey Bosa","DE","97","LAC","Ohio State",29,9],
+["Tuli Tuipulotu","DE","91","LAC","USC",23,2],
+["Sebastian Joseph-Day","DT","69","LAC","Rutgers",29,7],
+["Morgan Fox","DE","96","LAC","Colorado State",30,8],
+["Daiyan Henley","LB","0","LAC","Washington State",26,2],
+["Eric Kendricks","LB","42","LAC","UCLA",32,10],
+["Derwin James Jr.","S","3","LAC","Florida State",28,7],
+["Alohi Gilman","S","32","LAC","Notre Dame",27,5],
+["Ja'Sir Taylor","CB","26","LAC","Wake Forest",26,4],
+["Kristian Fulton","CB","21","LAC","LSU",27,5],
+["Rashawn Slater","OT","70","LAC","Northwestern",26,4],
+["Zion Johnson","OG","60","LAC","Boston College",26,3],
+["Will Clapp","C","63","LAC","LSU",29,7],
+["Foster Sarell","OT","74","LAC","Stanford",27,4],
+["Cameron Dicker","K","11","LAC","Texas",25,3],
+["J.K. Scott","P","10","LAC","Alabama",29,7],
+["Poona Ford","DT","97","LAC","Texas",30,7],
+["Matthew Stafford","QB","9","LAR","Georgia",37,16],
+["Cooper Kupp","WR","10","LAR","Eastern Washington",31,8],
+["Puka Nacua","WR","17","LAR","BYU",23,2],
+["Tyler Higbee","TE","89","LAR","Western Kentucky",31,9],
+["Kyren Williams","RB","23","LAR","Notre Dame",25,3],
+["Demarcus Robinson","WR","15","LAR","Florida",30,9],
+["Tutu Atwell","WR","18","LAR","Louisville",25,4],
+["Blake Corum","RB","21","LAR","Michigan",23,1],
+["Jalen Ramsey","CB","5","LAR","Florida State",30,9],
+["Aaron Donald","DT","99","LAR","Pittsburgh",33,10],
+["Byron Young","DE","97","LAR","Tennessee",25,2],
+["Kobie Turner","DT","91","LAR","Wake Forest",26,2],
+["Michael Hoecht","DE","97","LAR","Brown",28,5],
+["Ernest Jones IV","LB","50","LAR","South Carolina",26,4],
+["Bryce Huff","LB","58","LAR","Memphis",27,5],
+["Troy Reeder","LB","42","LAR","Delaware",29,7],
+["Russ Yeast","S","29","LAR","Kansas State",25,3],
+["Jason Taylor II","S","28","LAR","Oklahoma State",24,2],
+["Ahkello Witherspoon","CB","24","LAR","Colorado",30,8],
+["Tre'Davious White","CB","27","LAR","LSU",29,8],
+["Rob Havenstein","OT","79","LAR","Wisconsin",33,10],
+["Kevin Dotson","OG","69","LAR","Louisiana Lafayette",27,5],
+["Coleman Shelton","C","65","LAR","Washington",30,7],
+["Steve Avila","OG","76","LAR","TCU",25,2],
+["Joshua Karty","K","18","LAR","Stanford",24,1],
+["Ethan Evans","P","15","LAR","South Carolina",23,1],
+["Hunter Long","TE","84","LAR","Boston College",26,4],
+["Tua Tagovailoa","QB","1","MIA","Alabama",27,5],
+["Tyreek Hill","WR","10","MIA","West Alabama",30,9],
+["Jaylen Waddle","WR","17","MIA","Alabama",26,4],
+["De'Von Achane","RB","28","MIA","Texas A&M",23,2],
+["Durham Smythe","TE","81","MIA","Notre Dame",29,7],
+["Odell Beckham Jr.","WR","3","MIA","LSU",32,11],
+["Raheem Mostert","RB","31","MIA","Purdue",32,9],
+["Jonnu Smith","TE","9","MIA","Florida International",29,8],
+["Bradley Chubb","LB","2","MIA","Colorado State",28,7],
+["Jaelan Phillips","LB","15","MIA","Miami",26,4],
+["Emmanuel Ogbah","DE","91","MIA","Oklahoma State",32,10],
+["Christian Wilkins","DT","94","MIA","Clemson",29,6],
+["Zach Sieler","DT","92","MIA","Ferris State",29,7],
+["Andrew Van Ginkel","LB","43","MIA","Wisconsin",29,7],
+["David Long Jr.","LB","51","MIA","West Virginia",27,6],
+["Jevon Holland","S","8","MIA","Oregon",25,4],
+["DeShon Elliott","S","22","MIA","Texas",28,7],
+["Xavien Howard","CB","25","MIA","Baylor",31,9],
+["Kader Kohou","CB","4","MIA","Texas A&M-Commerce",27,3],
+["Terron Armstead","OT","72","MIA","Arkansas-Pine Bluff",35,13],
+["Robert Jones","OG","71","MIA","Middle Tennessee",27,4],
+["Connor Williams","C","58","MIA","Texas",29,7],
+["Liam Eichenberg","OT","74","MIA","Notre Dame",28,4],
+["Jason Sanders","K","7","MIA","New Mexico",29,7],
+["Jake Bailey","P","5","MIA","Stanford",28,6],
+["Jeff Wilson Jr.","RB","23","MIA","North Texas",30,7],
+["Braxton Berrios","WR","0","MIA","Miami",30,7],
+["Sam Darnold","QB","14","MIN","USC",27,7],
+["Justin Jefferson","WR","18","MIN","LSU",25,5],
+["Jordan Addison","WR","3","MIN","Pittsburgh",23,2],
+["T.J. Hockenson","TE","87","MIN","Iowa",27,6],
+["Aaron Jones","RB","33","MIN","UTEP",30,8],
+["Josh Oliver","TE","84","MIN","San Jose State",28,6],
+["Ty Chandler","RB","32","MIN","North Carolina",26,3],
+["Jalen Nailor","WR","15","MIN","Michigan State",26,3],
+["Brian O'Neill","OT","75","MIN","Pittsburgh",29,7],
+["Dalton Risner","OG","66","MIN","Kansas State",30,7],
+["Garrett Bradbury","C","56","MIN","NC State",29,7],
+["Blake Brandel","OT","64","MIN","Oregon State",29,6],
+["Ed Ingram","OG","67","MIN","LSU",26,3],
+["Harrison Phillips","DT","97","MIN","Stanford",29,7],
+["Jonathan Bullard","DE","96","MIN","Florida",31,9],
+["Patrick Jones II","DE","91","MIN","Pittsburgh",27,4],
+["Andrew Van Ginkel","LB","43","MIN","Wisconsin",29,7],
+["Ivan Pace Jr.","LB","40","MIN","Cincinnati",24,2],
+["Josh Metellus","S","44","MIN","Michigan",27,5],
+["Harrison Smith","S","22","MIN","Notre Dame",35,13],
+["Byron Murphy Jr.","CB","7","MIN","Washington",27,6],
+["Stephon Gilmore","CB","2","MIN","South Carolina",34,13],
+["Greg Joseph","K","1","MIN","Florida Atlantic",31,7],
+["Ryan Wright","P","14","MIN","Tulane",27,3],
+["Danielle Hunter","DE","99","MIN","LSU",30,10],
+["Jordan Hicks","LB","58","MIN","Texas",33,10],
+["Mekhi Blackmon","CB","27","MIN","USC",26,2],
+["Drake Maye","QB","10","NE","North Carolina",22,1],
+["Kendrick Bourne","WR","84","NE","Eastern Washington",29,8],
+["Hunter Henry","TE","85","NE","Arkansas",30,9],
+["Rhamondre Stevenson","RB","38","NE","Oklahoma",26,4],
+["JuJu Smith-Schuster","WR","9","NE","USC",28,8],
+["Demario Douglas","WR","3","NE","Liberty",24,2],
+["Ezekiel Elliott","RB","15","NE","Ohio State",29,9],
+["K.J. Osborn","WR","17","NE","Miami",28,5],
+["Ja'Lynn Polk","WR","5","NE","Washington",23,1],
+["Christian Barmore","DT","90","NE","Alabama",25,4],
+["Josh Uche","LB","55","NE","Michigan",27,5],
+["Matthew Judon","LB","9","NE","Grand Valley State",32,9],
+["Deatrich Wise Jr.","DE","91","NE","Arkansas",30,8],
+["Davon Godchaux","DT","92","NE","LSU",30,8],
+["Ja'Whaun Bentley","LB","8","NE","Purdue",28,7],
+["Kyle Dugger","S","23","NE","Lenoir-Rhyne",28,5],
+["Jabrill Peppers","S","3","NE","Michigan",29,8],
+["Christian Gonzalez","CB","6","NE","Oregon",23,2],
+["Jonathan Jones","CB","31","NE","Auburn",31,9],
+["Layden Robinson","OG","78","NE","Texas A&M",25,2],
+["Trent Brown","OT","77","NE","Florida",32,9],
+["David Andrews","C","60","NE","Georgia",33,10],
+["Cole Strange","OG","69","NE","Chattanooga",27,3],
+["Joey Slye","K","6","NE","Virginia Tech",29,7],
+["Bryce Baringer","P","17","NE","Michigan State",25,2],
+["Keion White","DE","99","NE","Old Dominion",27,2],
+["Marcus Jones","CB","25","NE","Houston",27,3],
+["Derek Carr","QB","4","NO","Fresno State",34,11],
+["Chris Olave","WR","12","NO","Ohio State",24,3],
+["Alvin Kamara","RB","41","NO","Tennessee",29,8],
+["Michael Thomas","WR","13","NO","Ohio State",32,9],
+["Juwan Johnson","TE","83","NO","Oregon",28,6],
+["Foster Moreau","TE","87","NO","LSU",28,6],
+["Jamaal Williams","RB","21","NO","BYU",30,8],
+["A.T. Perry","WR","17","NO","Wake Forest",25,2],
+["Rashid Shaheed","WR","89","NO","Weber State",26,3],
+["Cameron Jordan","DE","94","NO","California",35,14],
+["Shy Tuttle","DT","99","NO","Tennessee",28,7],
+["Bryan Bresee","DT","90","NO","Clemson",23,2],
+["Tanoh Kpassagnon","DE","90","NO","Villanova",30,8],
+["Pete Werner","LB","20","NO","Ohio State",26,4],
+["Demario Davis","LB","56","NO","Arkansas State",35,13],
+["Isaiah Foskey","DE","41","NO","Notre Dame",25,2],
+["Tyrann Mathieu","S","32","NO","LSU",33,12],
+["Marcus Maye","S","6","NO","Florida",31,9],
+["Marshon Lattimore","CB","23","NO","Ohio State",28,8],
+["Paulson Adebo","CB","29","NO","Stanford",25,4],
+["Ryan Ramczyk","OT","71","NO","Wisconsin",31,8],
+["Cesar Ruiz","OG","51","NO","Michigan",26,5],
+["Erik McCoy","C","78","NO","Texas A&M",28,6],
+["Trevor Penning","OT","70","NO","Northern Iowa",25,3],
+["Blake Grupe","K","2","NO","Arkansas State",27,2],
+["Lou Hedley","P","4","NO","Miami",29,3],
+["Kendre Miller","RB","25","NO","TCU",23,2],
+["Daniel Jones","QB","8","NYG","Duke",27,6],
+["Malik Nabers","WR","9","NYG","LSU",22,1],
+["Saquon Barkley","RB","26","NYG","Penn State",28,7],
+["Darren Waller","TE","12","NYG","Georgia Tech",32,9],
+["Darius Slayton","WR","86","NYG","Auburn",28,7],
+["Wan'Dale Robinson","WR","17","NYG","Kentucky",24,3],
+["Daniel Bellinger","TE","17","NYG","San Diego State",25,3],
+["Matt Breida","RB","22","NYG","Georgia Southern",30,8],
+["Dexter Lawrence II","DT","97","NYG","Clemson",27,6],
+["Brian Burns","LB","53","NYG","Florida State",26,6],
+["Kayvon Thibodeaux","LB","5","NYG","Oregon",23,3],
+["Azeez Ojulari","LB","51","NYG","Georgia",24,4],
+["Bobby Okereke","LB","58","NYG","Stanford",28,7],
+["Evan Neal","OT","73","NYG","Alabama",24,3],
+["Mark Glowinski","OG","64","NYG","West Virginia",33,10],
+["John Michael Schmitz","C","60","NYG","Minnesota",25,2],
+["Joshua Ezeudu","OG","60","NYG","North Carolina",26,3],
+["Cor'Dale Flott","CB","28","NYG","LSU",24,3],
+["Adoree' Jackson","CB","25","NYG","USC",29,8],
+["Jason Pinnock","CB","27","NYG","Pittsburgh",25,4],
+["Dane Belton","S","24","NYG","Iowa",25,3],
+["Graham Gano","K","9","NYG","Florida State",38,16],
+["Jamie Gillan","P","10","NYG","Arkansas-Pine Bluff",30,6],
+["Jalin Hyatt","WR","13","NYG","Tennessee",23,2],
+["Leo Chenal","LB","54","NYG","Wisconsin",25,3],
+["Nick McCloud","CB","26","NYG","Notre Dame",27,4],
+["Aaron Rodgers","QB","8","NYJ","California",41,20],
+["Davante Adams","WR","17","NYJ","Fresno State",32,11],
+["Allen Lazard","WR","10","NYJ","Iowa State",29,7],
+["Breece Hall","RB","20","NYJ","Iowa State",24,3],
+["Tyler Conklin","TE","83","NYJ","Central Michigan",30,8],
+["Garrett Wilson","WR","17","NYJ","Ohio State",24,3],
+["Randall Cobb","WR","18","NYJ","Kentucky",34,14],
+["Xazavian Valladay","RB","36","NYJ","Arizona State",26,3],
+["Haason Reddick","LB","7","NYJ","Temple",30,7],
+["Quinnen Williams","DT","95","NYJ","Alabama",27,6],
+["John Franklin-Myers","DE","91","NYJ","Stephen F. Austin",28,7],
+["Carl Lawson","LB","58","NYJ","Auburn",29,8],
+["Sauce Gardner","CB","1","NYJ","Cincinnati",24,3],
+["D.J. Reed","CB","4","NYJ","Kansas State",28,6],
+["Jordan Whitehead","S","6","NYJ","Pittsburgh",28,6],
+["Tony Adams","S","22","NYJ","Illinois",25,3],
+["Alijah Vera-Tucker","OG","75","NYJ","USC",26,4],
+["Tyron Smith","OT","77","NYJ","USC",34,14],
+["Wes Schweitzer","OG","71","NYJ","San Jose State",31,9],
+["Joe Tippmann","C","60","NYJ","Wisconsin",24,2],
+["Morgan Moses","OT","76","NYJ","Virginia",34,12],
+["Greg Zuerlein","K","4","NYJ","Missouri Western",37,12],
+["Thomas Morstead","P","5","NYJ","SMU",39,16],
+["Jermaine Johnson II","DE","52","NYJ","Florida State",25,3],
+["Solomon Thomas","DT","93","NYJ","Stanford",30,8],
+["Will McDonald IV","LB","99","NYJ","Iowa State",24,2],
+["Michael Carter","RB","32","NYJ","North Carolina",26,4],
+["Jalen Hurts","QB","1","PHI","Alabama",26,5],
+["A.J. Brown","WR","11","PHI","Ole Miss",27,6],
+["Saquon Barkley","RB","26","PHI","Penn State",28,7],
+["Dallas Goedert","TE","88","PHI","South Dakota State",30,7],
+["DeVonta Smith","WR","6","PHI","Alabama",26,4],
+["Olamide Zaccheaus","WR","17","PHI","Virginia",28,6],
+["D'Andre Swift","RB","4","PHI","Georgia",26,5],
+["Britain Covey","WR","18","PHI","Utah",27,4],
+["Darius Slay","CB","24","PHI","Mississippi State",33,12],
+["James Bradberry","CB","24","PHI","Samford",31,9],
+["C.J. Gardner-Johnson","S","23","PHI","Florida",27,6],
+["Reed Blankenship","S","32","PHI","Middle Tennessee",26,3],
+["Haason Reddick","LB","7","PHI","Temple",30,7],
+["Nakobe Dean","LB","17","PHI","Georgia",24,3],
+["Josh Sweat","LB","94","PHI","Florida State",28,7],
+["Jordan Davis","DT","90","PHI","Georgia",25,3],
+["Jalen Carter","DT","98","PHI","Georgia",23,2],
+["Brandon Graham","DE","55","PHI","Michigan",37,15],
+["Landon Dickerson","OG","69","PHI","Alabama",26,5],
+["Jason Kelce","C","62","PHI","Cincinnati",37,13],
+["Jordan Mailata","OT","68","PHI","South Sydney Rabbitohs",27,7],
+["Lane Johnson","OT","65","PHI","Oklahoma",34,12],
+["Jake Elliott","K","4","PHI","Memphis",30,8],
+["Braden Mann","P","8","PHI","Texas A&M",28,5],
+["Nolan Smith","LB","3","PHI","Georgia",24,2],
+["Russell Wilson","QB","3","PIT","Wisconsin",36,13],
+["Justin Fields","QB","2","PIT","Ohio State",26,4],
+["Najee Harris","RB","22","PIT","Alabama",27,4],
+["Diontae Johnson","WR","18","PIT","Toledo",28,6],
+["George Pickens","WR","14","PIT","Georgia",23,3],
+["Pat Freiermuth","TE","88","PIT","Penn State",26,4],
+["Jaylen Warren","RB","30","PIT","Oklahoma State",25,3],
+["Van Jefferson","WR","12","PIT","Florida",29,5],
+["T.J. Watt","LB","90","PIT","Wisconsin",30,8],
+["Alex Highsmith","LB","56","PIT","Charlotte",28,5],
+["Cameron Heyward","DT","97","PIT","Ohio State",35,14],
+["Keeanu Benton","DT","96","PIT","Wisconsin",24,2],
+["Larry Ogunjobi","DT","92","PIT","Charlotte",31,9],
+["Elandon Roberts","LB","44","PIT","Houston",31,9],
+["Cole Holcomb","LB","55","PIT","North Carolina",29,7],
+["Minkah Fitzpatrick","S","39","PIT","Alabama",28,7],
+["DeShon Elliott","S","22","PIT","Texas",28,7],
+["Levi Wallace","CB","29","PIT","Alabama",29,7],
+["Patrick Peterson","CB","7","PIT","LSU",34,14],
+["Dan Moore Jr.","OT","65","PIT","Texas A&M",26,4],
+["Isaac Seumalo","OG","56","PIT","Oregon State",31,9],
+["Zach Robinson","C","60","PIT","Ashland",27,4],
+["James Daniels","OG","78","PIT","Iowa",28,7],
+["Chris Boswell","K","9","PIT","Rice",33,10],
+["Pressley Harvin III","P","6","PIT","Georgia Tech",27,4],
+["Donte Jackson","CB","26","PIT","LSU",29,7],
+["Mason Cole","C","61","PIT","Michigan",29,7],
+["Brock Purdy","QB","13","SF","Iowa State",25,3],
+["Deebo Samuel","WR","19","SF","South Carolina",28,6],
+["George Kittle","TE","85","SF","Iowa",31,8],
+["Brandon Aiyuk","WR","11","SF","Arizona State",26,5],
+["Jordan Mason","RB","24","SF","Georgia Tech",25,3],
+["Christian McCaffrey","RB","23","SF","Stanford",28,8],
+["Jauan Jennings","WR","15","SF","Tennessee",28,5],
+["Cameron Latu","TE","82","SF","Alabama",26,3],
+["Nick Bosa","LB","97","SF","Ohio State",27,6],
+["Fred Warner","LB","54","SF","BYU",28,7],
+["Dre Greenlaw","LB","57","SF","Arkansas",28,7],
+["Javon Hargrave","DT","98","SF","South Carolina State",32,9],
+["Arik Armstead","DT","91","SF","Oregon",32,10],
+["Drake Jackson","LB","95","SF","USC",24,3],
+["Maliek Collins","DT","75","SF","Nebraska",30,9],
+["Talanoa Hufanga","S","29","SF","USC",25,4],
+["Tashaun Gipson","S","31","SF","Wyoming",35,14],
+["Charvarius Ward","CB","7","SF","Middle Tennessee",29,7],
+["Deommodore Lenoir","CB","2","SF","Oregon",25,4],
+["Trent Williams","OT","71","SF","Oklahoma",36,15],
+["Aaron Banks","OG","65","SF","Notre Dame",27,4],
+["Jake Brendel","C","56","SF","UCLA",31,9],
+["Spencer Burford","OG","74","SF","UTSA",26,3],
+["Mitch Wishnowsky","P","18","SF","Utah",31,6],
+["Jake Moody","K","4","SF","Michigan",25,2],
+["Javon Kinlaw","DT","99","SF","South Carolina",27,5],
+["Demetrius Flannigan-Fowles","S","45","SF","Arizona",27,4],
+["Geno Smith","QB","7","SEA","West Virginia",34,12],
+["DK Metcalf","WR","14","SEA","Ole Miss",27,6],
+["Tyler Lockett","WR","16","SEA","Kansas State",32,10],
+["Jaxon Smith-Njigba","WR","11","SEA","Ohio State",23,2],
+["Noah Fant","TE","87","SEA","Iowa",27,6],
+["Ken Walker III","RB","9","SEA","Michigan State",24,3],
+["Zach Charbonnet","RB","26","SEA","UCLA",24,2],
+["Abe Lucas","OT","72","SEA","Washington State",25,3],
+["Charles Cross","OT","67","SEA","Mississippi State",24,3],
+["Laken Tomlinson","OG","78","SEA","Duke",33,10],
+["Joey Hunt","C","58","SEA","TCU",32,8],
+["Damien Lewis","OG","68","SEA","LSU",27,5],
+["Dre'Mont Jones","DT","93","SEA","Ohio State",28,6],
+["Jarran Reed","DT","90","SEA","Alabama",33,9],
+["Leonard Williams","DT","99","SEA","USC",30,10],
+["Uchenna Nwosu","LB","10","SEA","USC",28,7],
+["Boye Mafe","LB","53","SEA","Minnesota",25,3],
+["Jordyn Brooks","LB","56","SEA","Texas Tech",27,5],
+["Devon Witherspoon","CB","21","SEA","Illinois",24,2],
+["Riq Woolen","CB","27","SEA","UTSA",26,3],
+["Coby Bryant","CB","8","SEA","Cincinnati",26,3],
+["Julian Love","S","37","SEA","Notre Dame",27,6],
+["Quandre Diggs","S","6","SEA","Texas",30,9],
+["Jason Myers","K","1","SEA","Iowa",35,9],
+["Michael Dickson","P","4","SEA","Texas",28,7],
+["Dareke Young","WR","83","SEA","Lenoir-Rhyne",26,3],
+["Connor Williams","C","52","SEA","Texas",29,7],
+["Baker Mayfield","QB","6","TB","Oklahoma",29,7],
+["Mike Evans","WR","13","TB","Texas A&M",31,11],
+["Chris Godwin","WR","14","TB","Penn State",28,8],
+["Rachaad White","RB","29","TB","Arizona State",26,3],
+["Cade Otton","TE","88","TB","Washington",25,3],
+["Ko Kieft","TE","41","TB","Minnesota",27,4],
+["Bucky Irving","RB","7","TB","Oregon",23,1],
+["Trey Palmer","WR","10","TB","Nebraska",24,2],
+["Vita Vea","DT","50","TB","Washington",30,7],
+["Calijah Kancey","DT","94","TB","Pittsburgh",24,2],
+["Yaya Diaby","LB","99","TB","Louisville",24,2],
+["Joe Tryon-Shoyinka","LB","9","TB","Washington",26,4],
+["Lavonte David","LB","54","TB","Nebraska",34,13],
+["Devin White","LB","45","TB","LSU",27,6],
+["Antoine Winfield Jr.","S","31","TB","Minnesota",26,5],
+["Christian Izien","S","22","TB","Rutgers",25,2],
+["Jamel Dean","CB","35","TB","Auburn",28,6],
+["Zyon McCollum","CB","27","TB","Sam Houston State",26,3],
+["Luke Goedeke","OG","51","TB","Central Michigan",25,3],
+["Tristan Wirfs","OT","78","TB","Iowa",25,5],
+["Ben Bredeson","OG","68","TB","Michigan",27,5],
+["Robert Hainsey","C","70","TB","Notre Dame",27,4],
+["Chase McLaughlin","K","10","TB","Illinois",28,5],
+["Jake Camarda","P","5","TB","Georgia",25,3],
+["Carlton Davis III","CB","24","TB","Auburn",28,7],
+["Logan Hall","DT","96","TB","Houston",25,3],
+["Tanner Hudson","TE","81","TB","Southern Arkansas",30,7],
+["Will Levis","QB","8","TEN","Kentucky",26,2],
+["Calvin Ridley","WR","0","TEN","Alabama",30,7],
+["Tony Pollard","RB","20","TEN","Memphis",27,5],
+["Chig Okonkwo","TE","85","TEN","Maryland",25,3],
+["Nick Westbrook-Ikhine","WR","15","TEN","Indiana",27,5],
+["Treylon Burks","WR","16","TEN","Arkansas",24,3],
+["Tyjae Spears","RB","36","TEN","Tulane",24,2],
+["DeAndre Hopkins","WR","10","TEN","Clemson",32,12],
+["Jeffery Simmons","DT","98","TEN","Mississippi State",28,6],
+["Azeez Al-Shaair","LB","0","TEN","Florida Atlantic",28,6],
+["Ola Adeniyi","LB","51","TEN","Toledo",28,7],
+["Harold Landry III","LB","58","TEN","Boston College",29,7],
+["Quandre Diggs","S","6","TEN","Texas",30,9],
+["Amani Hooker","S","37","TEN","Iowa",27,6],
+["L'Jarius Sneed","CB","38","TEN","Louisiana Tech",27,5],
+["Daryl Worley","CB","24","TEN","West Virginia",30,8],
+["Peter Skoronski","OT","77","TEN","Northwestern",24,2],
+["Dillon Radunz","OT","75","TEN","North Dakota State",27,4],
+["Daniel Brunskill","OG","60","TEN","San Jose State",30,7],
+["Lloyd Cushenberry III","C","79","TEN","LSU",27,5],
+["Nick Saben","OG","69","TEN","Michigan",27,4],
+["Nick Folk","K","2","TEN","Arizona",40,17],
+["Ryan Stonehouse","P","4","TEN","Colorado State",26,3],
+["Denico Autry","DE","96","TEN","Mississippi State",34,11],
+["Kevin Strong Jr.","DT","64","TEN","Texas-San Antonio",28,6],
+["Caleb Farley","CB","3","TEN","Virginia Tech",26,4],
+["Sean Murphy-Bunting","CB","0","TEN","Central Michigan",28,7],
+["Jayden Daniels","QB","5","WAS","LSU",24,1],
+["Terry McLaurin","WR","17","WAS","Ohio State",29,6],
+["Austin Ekeler","RB","30","WAS","Western Colorado",29,7],
+["Logan Thomas","TE","82","WAS","Virginia Tech",33,11],
+["Noah Brown","WR","85","WAS","Ohio State",29,7],
+["Luke McCaffrey","WR","82","WAS","Rice",23,1],
+["Brian Robinson Jr.","RB","8","WAS","Alabama",26,3],
+["Jeremy McNichols","RB","39","WAS","Boise State",30,8],
+["Emmanuel Forbes","CB","13","WAS","Mississippi State",23,2],
+["Kendall Fuller","CB","29","WAS","Virginia Tech",30,9],
+["Bobby Wagner","LB","45","WAS","Utah State",34,14],
+["Frankie Luvu","LB","49","WAS","Washington State",29,6],
+["Cody Barton","LB","55","WAS","Washington",29,7],
+["Jonathan Allen","DT","93","WAS","Alabama",30,8],
+["Daron Payne","DT","94","WAS","Alabama",27,7],
+["Dorance Armstrong","DE","92","WAS","Kansas",29,7],
+["Casey Toohill","LB","91","WAS","Stanford",27,5],
+["Kamren Curl","S","31","WAS","Arkansas",26,5],
+["Jeremy Reaves","S","39","WAS","South Alabama",29,7],
+["Mike Sainristil","CB","0","WAS","Michigan",24,1],
+["Andrew Wylie","OT","77","WAS","Eastern Michigan",30,7],
+["Chris Paul","OG","72","WAS","Tulsa",25,2],
+["Tyler Biadasz","C","63","WAS","Wisconsin",27,5],
+["Nick Allegretti","OG","74","WAS","Illinois",30,7],
+["Dustin Hopkins","K","3","WAS","Florida State",34,11],
+["Tress Way","P","5","WAS","Oklahoma",36,12],
+["Zach Tom","OG","50","WAS","Wake Forest",25,3]
+];
+
+const NFL_TEAMS = {
+  ARI:"Arizona Cardinals",ATL:"Atlanta Falcons",BAL:"Baltimore Ravens",
+  BUF:"Buffalo Bills",CAR:"Carolina Panthers",CHI:"Chicago Bears",
+  CIN:"Cincinnati Bengals",CLE:"Cleveland Browns",DAL:"Dallas Cowboys",
+  DEN:"Denver Broncos",DET:"Detroit Lions",GB:"Green Bay Packers",
+  HOU:"Houston Texans",IND:"Indianapolis Colts",JAX:"Jacksonville Jaguars",
+  KC:"Kansas City Chiefs",LV:"Las Vegas Raiders",LAC:"Los Angeles Chargers",
+  LAR:"Los Angeles Rams",MIA:"Miami Dolphins",MIN:"Minnesota Vikings",
+  NE:"New England Patriots",NO:"New Orleans Saints",NYG:"New York Giants",
+  NYJ:"New York Jets",PHI:"Philadelphia Eagles",PIT:"Pittsburgh Steelers",
+  SF:"San Francisco 49ers",SEA:"Seattle Seahawks",TB:"Tampa Bay Buccaneers",
+  TEN:"Tennessee Titans",WAS:"Washington Commanders",
+};
+
+const DIVISIONS = {
+  "AFC East":["Buffalo Bills","Miami Dolphins","New England Patriots","New York Jets"],
+  "AFC North":["Baltimore Ravens","Cincinnati Bengals","Cleveland Browns","Pittsburgh Steelers"],
+  "AFC South":["Houston Texans","Indianapolis Colts","Jacksonville Jaguars","Tennessee Titans"],
+  "AFC West":["Denver Broncos","Kansas City Chiefs","Las Vegas Raiders","Los Angeles Chargers"],
+  "NFC East":["Dallas Cowboys","New York Giants","Philadelphia Eagles","Washington Commanders"],
+  "NFC North":["Chicago Bears","Detroit Lions","Green Bay Packers","Minnesota Vikings"],
+  "NFC South":["Atlanta Falcons","Carolina Panthers","New Orleans Saints","Tampa Bay Buccaneers"],
+  "NFC West":["Arizona Cardinals","Los Angeles Rams","San Francisco 49ers","Seattle Seahawks"],
+};
+
+const POSITIONS = {
+  QB:"Quarterback",RB:"Running Back",WR:"Wide Receiver",TE:"Tight End",
+  K:"Kicker",P:"Punter",OT:"Offensive Tackle",OG:"Offensive Guard",C:"Center",
+  DE:"Defensive End",DT:"Defensive Tackle",LB:"Linebacker",
+  CB:"Cornerback",S:"Safety",FS:"Free Safety",SS:"Strong Safety",LS:"Long Snapper",
+};
+
+const CAT_META = {
+  "Team":        {color:"#38bdf8",icon:"🏟"},
+  "Position":    {color:"#c084fc",icon:"🎽"},
+  "College":     {color:"#fbbf24",icon:"🎓"},
+  "Jersey #":    {color:"#34d399",icon:"🔢"},
+  "Roster Spot": {color:"#f472b6",icon:"📋"},
+  "Division":    {color:"#60a5fa",icon:"🗺"},
+  "Conference":  {color:"#f87171",icon:"🏈"},
+  "Age":         {color:"#a78bfa",icon:"🎂"},
+  "Experience":  {color:"#fb923c",icon:"📅"},
+  "College Mates":{color:"#4ade80",icon:"🤝"},
+};
+
+// Build player pool
+const PLAYERS = RAW.map(([n,p,j,t,c,a,e]) => ({
+  name:n, pos:p, jersey:j, abbrev:t, college:c, age:a, exp:e,
+  team: NFL_TEAMS[t] || t
+}));
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+const shuffle = a => [...a].sort(()=>Math.random()-.5);
+const sample  = (a,n) => shuffle(a).slice(0,n);
+const pick    = a => a[Math.floor(Math.random()*a.length)];
+
+function randNums(exclude, min, max, n) {
+  const s = new Set();
+  let tries = 0;
+  while (s.size < n && tries++ < 200) {
+    const v = Math.floor(Math.random()*(max-min+1))+min;
+    if (v !== exclude) s.add(v);
+  }
+  return [...s];
+}
+
+// ── QUESTION GENERATORS ───────────────────────────────────────────────────
+function qTeam(p) {
+  const wrong = sample(Object.values(NFL_TEAMS).filter(t=>t!==p.team),3);
+  return {q:`What team does ${p.name} play for?`,
+    choices:shuffle([p.team,...wrong]),answer:p.team,cat:"Team",player:p.name};
+}
+function qPosition(p) {
+  if (!POSITIONS[p.pos]) return null;
+  const correct = POSITIONS[p.pos];
+  const wrong = sample(Object.values(POSITIONS).filter(v=>v!==correct),3);
+  return {q:`What position does ${p.name} play?`,
+    choices:shuffle([correct,...wrong]).slice(0,4),answer:correct,cat:"Position",player:p.name};
+}
+function qCollege(p) {
+  if (!p.college) return null;
+  const others = [...new Set(PLAYERS.map(x=>x.college).filter(c=>c&&c!==p.college))];
+  if (others.length<3) return null;
+  return {q:`Which college did ${p.name} attend?`,
+    choices:shuffle([p.college,...sample(others,3)]),answer:p.college,cat:"College",player:p.name};
+}
+function qJersey(p) {
+  const num = parseInt(p.jersey);
+  if (isNaN(num)) return null;
+  const wrong = randNums(num,Math.max(1,num-10),Math.min(99,num+10),3).map(String);
+  return {q:`What jersey number does ${p.name} wear?`,
+    choices:shuffle([p.jersey,...wrong]),answer:p.jersey,cat:"Jersey #",player:p.name};
+}
+function qRosterSpot(p) {
+  if (!POSITIONS[p.pos]) return null;
+  const same = PLAYERS.filter(x=>x.pos===p.pos&&x.team!==p.team&&x.name!==p.name).map(x=>x.name);
+  if (same.length<3) return null;
+  const choices = shuffle([p.name,...sample(same,3)]);
+  return {q:`Which player is the ${POSITIONS[p.pos]} for the ${p.team}?`,
+    choices,answer:p.name,cat:"Roster Spot",player:p.name};
+}
+function qDivision(p) {
+  const div = Object.entries(DIVISIONS).find(([,ts])=>ts.includes(p.team))?.[0];
+  if (!div) return null;
+  const wrong = sample(Object.keys(DIVISIONS).filter(d=>d!==div),3);
+  return {q:`Which division does the ${p.team} play in?`,
+    choices:shuffle([div,...wrong]),answer:div,cat:"Division",player:p.name};
+}
+function qConference(p) {
+  const div = Object.entries(DIVISIONS).find(([,ts])=>ts.includes(p.team))?.[0];
+  if (!div) return null;
+  const conf = div.startsWith("AFC")?"AFC":"NFC";
+  const other = conf==="AFC"?"NFC":"AFC";
+  return {q:`Is the ${p.team} in the AFC or NFC?`,
+    choices:shuffle([conf,other,conf+" East",other+" West"]),answer:conf,cat:"Conference",player:p.name};
+}
+function qAge(p) {
+  if (!p.age) return null;
+  const wrong = randNums(p.age,Math.max(20,p.age-5),p.age+5,3).map(String);
+  return {q:`How old is ${p.name}?`,
+    choices:shuffle([String(p.age),...wrong]),answer:String(p.age),cat:"Age",player:p.name};
+}
+function qExperience(p) {
+  const lbl = n=>`${n} year${n!==1?"s":""}`;
+  const correct = lbl(p.exp);
+  const wrong = randNums(p.exp,Math.max(0,p.exp-5),p.exp+5,3).map(lbl);
+  return {q:`How many years of NFL experience does ${p.name} have?`,
+    choices:shuffle([correct,...wrong]),answer:correct,cat:"Experience",player:p.name};
+}
+function qCollegeMates(p) {
+  if (!p.college) return null;
+  const mates = PLAYERS.filter(x=>x.college===p.college&&x.name!==p.name).map(x=>x.name);
+  if (!mates.length) return null;
+  const correct = pick(mates);
+  const wrong = PLAYERS.filter(x=>x.college!==p.college).map(x=>x.name);
+  if (wrong.length<3) return null;
+  return {q:`Which player also attended ${p.college} like ${p.name}?`,
+    choices:shuffle([correct,...sample(wrong,3)]),answer:correct,cat:"College Mates",player:p.name};
+}
+
+const MAKERS = [qTeam,qPosition,qCollege,qJersey,qRosterSpot,qDivision,qConference,qAge,qExperience,qCollegeMates];
+
+function buildQuiz(n) {
+  const qs=[]; let tries=0;
+  while(qs.length<n && tries++<n*25) {
+    const p=pick(PLAYERS), fn=pick(MAKERS), q=fn(p);
+    if(q) qs.push(q);
+  }
+  return qs;
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let state = {screen:"menu",questions:[],idx:0,selected:null,streak:0,results:[]};
+
+function setState(patch) {
+  Object.assign(state, patch);
+  render();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+const app = document.getElementById("app");
+
+function render() {
+  if (state.screen==="menu")    app.innerHTML = renderMenu();
+  if (state.screen==="quiz")    app.innerHTML = renderQuiz();
+  if (state.screen==="results") app.innerHTML = renderResults();
+  bindEvents();
+}
+
+function renderMenu() {
+  return `
+  <div class="header screen">
+    <div class="logo">NFL QUIZ</div>
+    <div class="tagline">Test your football IQ</div>
+  </div>
+  <div class="card screen">
+    <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#334155;margin-bottom:16px">Choose a mode</div>
+    <button class="menu-btn" data-action="start" data-n="5">
+      <span class="btn-icon">⚡</span>
+      <span class="btn-label">Quick Blitz</span>
+      <span class="btn-meta">5 questions</span>
+    </button>
+    <button class="menu-btn" data-action="start" data-n="15">
+      <span class="btn-icon">🏈</span>
+      <span class="btn-label">Standard Game</span>
+      <span class="btn-meta">15 questions</span>
+    </button>
+    <button class="menu-btn" data-action="start" data-n="25">
+      <span class="btn-icon">🏆</span>
+      <span class="btn-label">Full Gauntlet</span>
+      <span class="btn-meta">25 questions</span>
+    </button>
+    <hr class="divider">
+    <div class="footnote">${PLAYERS.length} players · 32 teams · 10 question types</div>
+  </div>`;
+}
+
+function renderQuiz() {
+  const {questions,idx,selected,streak} = state;
+  const q = questions[idx];
+  const pct = idx/questions.length*100;
+  const meta = CAT_META[q.cat]||{color:"#94a3b8",icon:"❓"};
+  const answered = selected !== null;
+  const letters = ["A","B","C","D"];
+
+  const choicesHtml = q.choices.slice(0,4).map((ch,i)=>{
+    let cls = "choice";
+    if (answered) {
+      if (ch===q.answer) cls+=" correct";
+      else if (ch===selected) cls+=" wrong";
+    }
+    return `<button class="${cls}" data-action="choose" data-choice="${encodeURIComponent(ch)}"
+      ${answered?"disabled":""}>
+      <span class="letter">${letters[i]}</span>${ch}
+    </button>`;
+  }).join("");
+
+  const feedbackHtml = answered ? `
+    <div class="feedback ${selected===q.answer?"correct":"wrong"}">
+      ${selected===q.answer?"✅ Correct!":"❌ Wrong! The answer was: <strong>"+q.answer+"</strong>"}
+    </div>` : "";
+
+  const nextLabel = idx+1>=questions.length?"See Results →":"Next Question →";
+
+  // Highlight player name in question
+  const qText = q.q.replace(q.player, `<span class="player">${q.player}</span>`);
+
+  return `
+  <div style="width:100%;max-width:580px">
+    <div class="progress-wrap">
+      <div class="progress-fill" style="width:${pct}%"></div>
+    </div>
+    <div class="card screen">
+      <div class="q-meta">
+        <span class="q-counter">Q ${idx+1} / ${questions.length}</span>
+        ${streak>=2?`<span class="streak">🔥 ${streak} streak</span>`:""}
+      </div>
+      <div class="cat-badge" style="color:${meta.color};border-color:${meta.color}44;background:${meta.color}11">
+        ${meta.icon} ${q.cat}
+      </div>
+      <div class="question">${qText}</div>
+      <div class="choices">${choicesHtml}</div>
+      ${feedbackHtml}
+      ${answered?`<button class="next-btn" data-action="next">${nextLabel}</button>`:""}
+    </div>
+  </div>`;
+}
+
+function renderResults() {
+  const {results} = state;
+  const total = results.length;
+  const score = results.filter(r=>r.correct).length;
+  const pct = Math.round(score/total*100);
+
+  const grades = [
+    [100,"🏆","PERFECT! NFL Genius!","#4ade80"],
+    [80, "🌟","Excellent!","#86efac"],
+    [60, "👍","Solid NFL knowledge!","#fbbf24"],
+    [40, "📚","Study the depth charts!","#fb923c"],
+    [0,  "😬","Hit the film room!","#f87171"],
+  ];
+  const [,em,txt,gc] = grades.find(([t])=>pct>=t);
+
+  const catMap = {};
+  results.forEach(r=>{
+    if(!catMap[r.cat]) catMap[r.cat]=[0,0];
+    catMap[r.cat][1]++;
+    if(r.correct) catMap[r.cat][0]++;
+  });
+
+  const catRows = Object.entries(catMap).map(([cat,[c,a]])=>{
+    const m = CAT_META[cat]||{color:"#94a3b8",icon:"❓"};
+    const w = a?Math.round(c/a*100):0;
+    return `<div class="cat-row">
+      <div class="cat-name">${m.icon} ${cat}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${w}%;background:${m.color}"></div></div>
+      <div class="cat-frac">${c}/${a}</div>
+    </div>`;
+  }).join("");
+
+  return `
+  <div class="card screen" style="max-width:580px;text-align:center">
+    <div class="score-huge">${score}<span style="font-size:50px;opacity:.35">/${total}</span></div>
+    <div class="score-sub">${pct}% correct</div>
+    <div class="grade-row">
+      <span class="grade-emoji">${em}</span>
+      <span class="grade-text" style="color:${gc}">${txt}</span>
+    </div>
+    <hr class="divider" style="margin:20px 0">
+    <div class="section-label" style="text-align:left">By Category</div>
+    <div class="cat-list">${catRows}</div>
+    <button class="play-again" data-action="menu">Play Again 🏈</button>
+  </div>`;
+}
+
+function bindEvents() {
+  document.querySelectorAll("[data-action]").forEach(el=>{
+    el.addEventListener("click", handleAction);
+  });
+}
+
+function handleAction(e) {
+  const el = e.currentTarget;
+  const action = el.dataset.action;
+
+  if (action==="start") {
+    const n = parseInt(el.dataset.n);
+    setState({screen:"quiz",questions:buildQuiz(n),idx:0,selected:null,streak:0,results:[]});
+  }
+  if (action==="choose") {
+    if (state.selected!==null) return;
+    const choice = decodeURIComponent(el.dataset.choice);
+    const correct = choice===state.questions[state.idx].answer;
+    const newStreak = correct ? state.streak+1 : 0;
+    const newResults = [...state.results, {cat:state.questions[state.idx].cat, correct}];
+    setState({selected:choice, streak:newStreak, results:newResults});
+  }
+  if (action==="next") {
+    const next = state.idx+1;
+    if (next>=state.questions.length) setState({screen:"results"});
+    else setState({idx:next, selected:null});
+  }
+  if (action==="menu") {
+    setState({screen:"menu",questions:[],idx:0,selected:null,streak:0,results:[]});
+  }
+}
+
+render();
+</script>
+</body>
+</html>
