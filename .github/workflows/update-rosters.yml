@@ -1,0 +1,79 @@
+name: Update NFL Rosters
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Every Monday at 6am UTC (after weekend games)
+  workflow_dispatch:        # Also allows manual trigger from GitHub UI
+
+jobs:
+  update-rosters:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Fetch NFL rosters from ESPN
+        run: |
+          python3 << 'EOF'
+          import urllib.request, json, time
+
+          TEAMS = [
+            "ARI","ATL","BAL","BUF","CAR","CHI","CIN","CLE",
+            "DAL","DEN","DET","GB","HOU","IND","JAX","KC",
+            "LAC","LAR","LV","MIA","MIN","NE","NO","NYG",
+            "NYJ","PHI","PIT","SF","SEA","TB","TEN","WAS"
+          ]
+
+          all_players = []
+          for abbrev in TEAMS:
+              url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{abbrev}/roster"
+              try:
+                  req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                  with urllib.request.urlopen(req, timeout=10) as r:
+                      data = json.loads(r.read())
+                  for group in data.get("athletes", []):
+                      for a in group.get("items", []):
+                          name = a.get("displayName", "")
+                          if not name:
+                              continue
+                          all_players.append({
+                              "n": name,
+                              "p": (a.get("position") or {}).get("abbreviation", ""),
+                              "j": a.get("jersey", ""),
+                              "t": abbrev,
+                              "c": (a.get("college") or {}).get("name", ""),
+                              "a": a.get("age") or 0,
+                              "e": (a.get("experience") or {}).get("years") or 0,
+                          })
+                  print(f"  {abbrev}: {len([p for p in all_players if p['t']==abbrev])} players")
+                  time.sleep(0.2)
+              except Exception as ex:
+                  print(f"  {abbrev}: ERROR {ex}")
+
+          # Deduplicate
+          seen = set()
+          unique = []
+          for p in all_players:
+              key = p["n"] + "|" + p["t"]
+              if key not in seen:
+                  seen.add(key)
+                  unique.append(p)
+
+          output = {"updated": __import__('datetime').date.today().isoformat(), "players": unique}
+          with open("roster.json", "w") as f:
+              json.dump(output, f, separators=(",", ":"))
+
+          print(f"\nTotal unique players: {len(unique)}")
+          print(f"Saved to roster.json")
+          EOF
+
+      - name: Commit updated roster
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add roster.json
+          git diff --staged --quiet || git commit -m "Auto-update NFL rosters $(date +%Y-%m-%d)"
+          git push
